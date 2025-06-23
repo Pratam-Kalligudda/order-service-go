@@ -8,9 +8,10 @@ import (
 )
 
 type Config struct {
-	HOST   string
-	DNS    string
-	SECRET string
+	HOST                string
+	DNS                 string
+	SECRET              string
+	PRODUCT_SERVICE_URL string
 }
 
 func init() {
@@ -34,6 +35,10 @@ func SetupEnv() (Config, error) {
 	if len(secret) <= 0 {
 		return Config{}, errors.New("couldnt load secret")
 	}
+	url := os.Getenv("PRODUCT_SERVICE_URL")
+	if len(secret) <= 0 {
+		return Config{}, errors.New("couldnt load secret")
+	}
 
-	return Config{HOST: host, DNS: dns, SECRET: secret}, nil
+	return Config{HOST: host, DNS: dns, SECRET: secret, PRODUCT_SERVICE_URL: url}, nil
 }

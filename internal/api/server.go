@@ -28,7 +28,7 @@ func SetupServer(config config.Config) {
 	httpHandler := rest.HTTPHandler{
 		App:  app,
 		DB:   db,
-		Auth: helper.NewAuth(config.SECRET),
+		Auth: helper.NewAuth(config.SECRET, config.PRODUCT_SERVICE_URL),
 	}
 
 	setupHandler(httpHandler)

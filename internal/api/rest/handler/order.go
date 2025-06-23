@@ -26,10 +26,10 @@ func SetupOrderHandler(rh rest.HTTPHandler) {
 	svc := service.NewOrderService(repo, rh.Auth)
 	handler := OrderHandler{svc: svc}
 
-	pvtRoutes := app.Group("/order", rh.Auth.Authorize)
-	pvtRoutes.Get("/", handler.ListOrders)
-	pvtRoutes.Post("/checkout", handler.OrderCartItem)
-	pvtRoutes.Get("/:id", handler.GetOrderDetail)
+	orderRoutes := app.Group("/order", rh.Auth.Authorize)
+	orderRoutes.Get("/", handler.ListOrders)
+	orderRoutes.Post("/checkout", handler.OrderCartItem)
+	orderRoutes.Get("/:id", handler.GetOrderDetail)
 
 }
 

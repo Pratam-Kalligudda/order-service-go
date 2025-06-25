@@ -11,10 +11,11 @@ type Cart struct {
 
 type CartItem struct {
 	ID          uint    `json:"id,omitempty"`
-	CartID      uint    `json:"order_id,omitempty" gorm:""`
+	CartID      uint    `json:"cart_id,omitempty"`
 	ProductID   uint    `json:"product_id,omitempty"`
 	ProductName string  `json:"product_name,omitempty"`
-	Quantity    int     `json:"quantity,omitempty"`
+	Quantity    int     `json:"quantity,omitempty" gorm:"default:1"`
 	Price       float64 `json:"price,omitempty"`
 	Cart        Cart    `gorm:"foreignKey:CartID; references:ID"`
+	Active      bool    `json:"active" gorm:"default:true"`
 }

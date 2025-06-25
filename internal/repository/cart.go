@@ -7,10 +7,11 @@ import (
 )
 
 type CartRepository interface {
+	CreateCart(uint) (uint,error)
 	GetCartItems(uint) ([]domain.CartItem, error)
-	PostCartItem(uint) (domain.CartItem, error)
-	UpdateCartItem(uint) (domain.CartItem, error)
-	DeleteCartItem(uint) (domain.CartItem, error)
+	PostCartItem(domain.CartItem) (domain.CartItem, error)
+	UpdateCartItem(uint,int) (domain.CartItem, error)
+	DeleteCartItem(uint) ( error)
 	ClearCartItem(uint) error
 	GetCartIDForUserID(uint) (uint, error)
 }
@@ -23,33 +24,45 @@ func NewCartRepository(db *gorm.DB) CartRepository {
 	return &cartRepository{db: db}
 }
 
+func (ct *cartRepository) CreateCart(userId uint) (uint, error) {
+	cart := domain.Cart{UserID : userId}
+	err := ct.db.Create(&cart).Error
+	return cart.ID,err
+}
+
 func (ct *cartRepository) GetCartItems(id uint) ([]domain.CartItem, error) {
+	var cartItems []domain.CartItem
+err := ct.db.Model(&domain.CartItem{}).Find(&cartItems, "cart_id = ?", id).Error
+	return cartItems,err
+}
+
+func (ct *cartRepository) PostCartItem(item domain.CartItem) (domain.CartItem, error) {
+	err := ct.db.Create(&item).Error
+	return item, err
+}
+
+func (ct *cartRepository) UpdateCartItem(id uint,quantity int) (domain.CartItem, error) {
+	var cartItem domain.CartItem
+err := ct.db.Model(&cartItem).Where("id = ?", id).Update("quantity",quantity).Error
+	return cartItem,err
+}
+
+func (ct *cartRepository) DeleteCartItem(id uint) ( error) {
+	err := ct.db.Delete(&domain.CartItem{}, id).Error
+	return  err
+}
+
+func (ct *cartRepository) ClearCartItem(id uint) error {
+	err := ct.db.Where("cart_id = ?",id).Delete(&domain.CartItem{}).Error
+	return err
+}
+
+
+func (ct *cartRepository) GetCartIDForUserID(id uint) (uint, error) {
 	var cart domain.Cart
-	err := ct.db.Model(&domain.Cart).Find(&cart, "id = ?", id).Error
+	err := ct.db.First(&cart, "id = ?", id).Error
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
-	var cartItems domain.CartItem
-	err = ct.db.Model(&domain.CartItem).Find(&cartItems, "id = ?", cart.ID)
-	return nil, nil
-}
-
-func (ct *cartRepository) PostCartItem(uint) (domain.CartItem, error) {
-	return domain.CartItem{}, nil
-}
-
-func (ct *cartRepository) UpdateCartItem(uint) (domain.CartItem, error) {
-	return domain.CartItem{}, nil
-}
-
-func (ct *cartRepository) DeleteCartItem(uint) (domain.CartItem, error) {
-	return domain.CartItem{}, nil
-}
-
-func (ct *cartRepository) ClearCartItem(uint) error {
-	return nil
-}
-
-func (ct *cartRepository) GetCartIDForUserID(uint) (uint, error) {
 	return 0, nil
 }

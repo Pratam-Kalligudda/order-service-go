@@ -1,8 +1,9 @@
 package repository
 
 import (
-	"github.com/Pratam-Kalligudda/order-service-go/internal/domain"
 	"gorm.io/gorm"
+
+	"github.com/Pratam-Kalligudda/order-service-go/internal/domain"
 )
 
 type CartRepository interface {
@@ -21,21 +22,34 @@ type cartRepository struct {
 func NewCartRepository(db *gorm.DB) CartRepository {
 	return &cartRepository{db: db}
 }
-func (ct *cartRepository) GetCartItems(uint) ([]domain.CartItem, error) {
+
+func (ct *cartRepository) GetCartItems(id uint) ([]domain.CartItem, error) {
+	var cart domain.Cart
+	err := ct.db.Model(&domain.Cart).Find(&cart, "id = ?", id).Error
+	if err != nil {
+		return nil, err
+	}
+	var cartItems domain.CartItem
+	err = ct.db.Model(&domain.CartItem).Find(&cartItems, "id = ?", cart.ID)
 	return nil, nil
 }
+
 func (ct *cartRepository) PostCartItem(uint) (domain.CartItem, error) {
 	return domain.CartItem{}, nil
 }
+
 func (ct *cartRepository) UpdateCartItem(uint) (domain.CartItem, error) {
 	return domain.CartItem{}, nil
 }
+
 func (ct *cartRepository) DeleteCartItem(uint) (domain.CartItem, error) {
 	return domain.CartItem{}, nil
 }
+
 func (ct *cartRepository) ClearCartItem(uint) error {
 	return nil
 }
+
 func (ct *cartRepository) GetCartIDForUserID(uint) (uint, error) {
 	return 0, nil
 }

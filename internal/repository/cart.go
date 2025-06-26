@@ -7,11 +7,11 @@ import (
 )
 
 type CartRepository interface {
-	CreateCart(uint) (uint,error)
+	CreateCart(uint) (uint, error)
 	GetCartItems(uint) ([]domain.CartItem, error)
 	PostCartItem(domain.CartItem) (domain.CartItem, error)
-	UpdateCartItem(uint,int) (domain.CartItem, error)
-	DeleteCartItem(uint) ( error)
+	UpdateCartItem(uint, uint, int) (domain.CartItem, error)
+	DeleteCartItem(uint, uint) error
 	ClearCartItem(uint) error
 	GetCartIDForUserID(uint) (uint, error)
 }
@@ -25,15 +25,15 @@ func NewCartRepository(db *gorm.DB) CartRepository {
 }
 
 func (ct *cartRepository) CreateCart(userId uint) (uint, error) {
-	cart := domain.Cart{UserID : userId}
+	cart := domain.Cart{UserID: userId}
 	err := ct.db.Create(&cart).Error
-	return cart.ID,err
+	return cart.ID, err
 }
 
 func (ct *cartRepository) GetCartItems(id uint) ([]domain.CartItem, error) {
 	var cartItems []domain.CartItem
-err := ct.db.Model(&domain.CartItem{}).Find(&cartItems, "cart_id = ?", id).Error
-	return cartItems,err
+	err := ct.db.Model(&domain.CartItem{}).Find(&cartItems, "cart_id = ?", id).Error
+	return cartItems, err
 }
 
 func (ct *cartRepository) PostCartItem(item domain.CartItem) (domain.CartItem, error) {
@@ -41,22 +41,21 @@ func (ct *cartRepository) PostCartItem(item domain.CartItem) (domain.CartItem, e
 	return item, err
 }
 
-func (ct *cartRepository) UpdateCartItem(id uint,quantity int) (domain.CartItem, error) {
+func (ct *cartRepository) UpdateCartItem(cartId, productId uint, quantity int) (domain.CartItem, error) {
 	var cartItem domain.CartItem
-err := ct.db.Model(&cartItem).Where("id = ?", id).Update("quantity",quantity).Error
-	return cartItem,err
+	err := ct.db.Model(&cartItem).Where("cart_id = ?", cartId).Where("product_id = ?", productId).Update("quantity", quantity).Error
+	return cartItem, err
 }
 
-func (ct *cartRepository) DeleteCartItem(id uint) ( error) {
-	err := ct.db.Delete(&domain.CartItem{}, id).Error
-	return  err
-}
-
-func (ct *cartRepository) ClearCartItem(id uint) error {
-	err := ct.db.Where("cart_id = ?",id).Delete(&domain.CartItem{}).Error
+func (ct *cartRepository) DeleteCartItem(productId, cartId uint) error {
+	err := ct.db.Where("cart_id = ?", cartId).Where("product_id = ?", productId).Delete(&domain.CartItem{}).Error
 	return err
 }
 
+func (ct *cartRepository) ClearCartItem(cartId uint) error {
+	err := ct.db.Where("cart_id = ?", cartId).Delete(&domain.CartItem{}).Error
+	return err
+}
 
 func (ct *cartRepository) GetCartIDForUserID(id uint) (uint, error) {
 	var cart domain.Cart

@@ -1,12 +1,15 @@
 package handler
 
 import (
+	"fmt"
 	"log"
 
+	"github.com/gofiber/fiber/v3"
+
 	"github.com/Pratam-Kalligudda/order-service-go/internal/api/rest"
+	"github.com/Pratam-Kalligudda/order-service-go/internal/dto"
 	"github.com/Pratam-Kalligudda/order-service-go/internal/repository"
 	"github.com/Pratam-Kalligudda/order-service-go/internal/service"
-	"github.com/gofiber/fiber/v3"
 )
 
 type CartHandler struct {
@@ -29,11 +32,36 @@ func SetupCartHandler(rh rest.HTTPHandler) {
 }
 
 func (h *CartHandler) GetCartItems(c fiber.Ctx) error {
-	return c.Status(fiber.StatusOK).JSON(Json{"message": "succesfully got cart items"})
+	userId, ok := c.Locals("userId", 0).(uint)
+	if !ok || userId <= 0 {
+		return c.Status(fiber.StatusInternalServerError).JSON(Json{"error": "invalid userId : " + fmt.Sprint(userId)})
+	}
+
+	cartItems, err := h.svc.GetCartItems(userId)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(Json{"error": err})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(Json{"message": "succesfully got cart items", "items": cartItems})
 }
 
 func (h *CartHandler) AddItemToCart(c fiber.Ctx) error {
-	return c.Status(fiber.StatusOK).JSON(Json{"message": "succesfully added item to cart"})
+	userId, ok := c.Locals("userId", 0).(uint)
+	if !ok || userId <= 0 {
+		return c.Status(fiber.StatusInternalServerError).JSON(Json{"error": "invalid userId : " + fmt.Sprint(userId)})
+	}
+
+	var dto dto.AddUpdateProduct
+	err := c.Bind().Body(&dto)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(Json{"error": err})
+	}
+
+	item, err := h.svc.AddItemToCart(userId, dto)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(Json{"error": err})
+	}
+	return c.Status(fiber.StatusOK).JSON(Json{"message": "succesfully added item to cart", "item": item})
 }
 
 func (h *CartHandler) UpdateCartItem(c fiber.Ctx) error {

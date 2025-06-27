@@ -50,8 +50,9 @@ func (s *CartService) AddItemToCart(userId uint, ctItem dto.AddUpdateProduct) (d
 			if err != nil {
 				return domain.CartItem{}, err
 			}
+		} else {
+			return domain.CartItem{}, err
 		}
-		return domain.CartItem{}, err
 	}
 
 	item := domain.CartItem{

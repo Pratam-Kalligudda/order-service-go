@@ -63,5 +63,5 @@ func (ct *cartRepository) GetCartIDForUserID(id uint) (uint, error) {
 	if err != nil {
 		return 0, err
 	}
-	return 0, nil
+	return cart.ID, nil
 }

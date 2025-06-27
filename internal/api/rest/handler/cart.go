@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/gofiber/fiber/v3"
 
@@ -25,14 +26,14 @@ func SetupCartHandler(rh rest.HTTPHandler) {
 
 	pvtRoutes := app.Group("/cart", rh.Auth.Authorize)
 	pvtRoutes.Get("/", handler.GetCartItems)
-	pvtRoutes.Post("/item/:id", handler.AddItemToCart)
-	pvtRoutes.Put("/item/:id", handler.UpdateCartItem)
+	pvtRoutes.Post("/item/add", handler.AddItemToCart)
+	pvtRoutes.Put("/item/update", handler.UpdateCartItem)
 	pvtRoutes.Delete("/item/:id", handler.RemoveCartItem)
 	pvtRoutes.Delete("/clear", handler.ClearCart)
 }
 
 func (h *CartHandler) GetCartItems(c fiber.Ctx) error {
-	userId, ok := c.Locals("userId", 0).(uint)
+	userId, ok := c.Locals("userId").(uint)
 	if !ok || userId <= 0 {
 		return c.Status(fiber.StatusInternalServerError).JSON(Json{"error": "invalid userId : " + fmt.Sprint(userId)})
 	}
@@ -46,7 +47,7 @@ func (h *CartHandler) GetCartItems(c fiber.Ctx) error {
 }
 
 func (h *CartHandler) AddItemToCart(c fiber.Ctx) error {
-	userId, ok := c.Locals("userId", 0).(uint)
+	userId, ok := c.Locals("userId").(uint)
 	if !ok || userId <= 0 {
 		return c.Status(fiber.StatusInternalServerError).JSON(Json{"error": "invalid userId : " + fmt.Sprint(userId)})
 	}
@@ -65,13 +66,55 @@ func (h *CartHandler) AddItemToCart(c fiber.Ctx) error {
 }
 
 func (h *CartHandler) UpdateCartItem(c fiber.Ctx) error {
+	userId, ok := c.Locals("userId").(uint)
+	if !ok || userId <= 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(Json{"error": "invalid userId : " + fmt.Sprintf("type : %T value : %v", userId, userId)})
+	}
+
+	var dto dto.AddUpdateProduct
+	err := c.Bind().Body(&dto)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(Json{"error": "invalid body :" + err.Error()})
+	}
+
+	err = h.svc.UpdateCartItem(userId, dto)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(Json{"error": err.Error()})
+	}
+
 	return c.Status(fiber.StatusOK).JSON(Json{"message": "succesfully updated cart item"})
 }
 
 func (h *CartHandler) RemoveCartItem(c fiber.Ctx) error {
+	userId, ok := c.Locals("userId").(uint)
+	if !ok || userId <= 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(Json{"error": "invalid userId : " + fmt.Sprintf("type : %T value : %v", userId, userId)})
+	}
+
+	productIdStr := c.Params("id")
+	productId, err := strconv.Atoi(productIdStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(Json{"error": "invalid param : " + err.Error()})
+	}
+
+	err = h.svc.RemoveCartItem(userId, uint(productId))
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(Json{"error": err.Error()})
+	}
+
 	return c.Status(fiber.StatusOK).JSON(Json{"message": "succesfully removed cart item"})
 }
 
 func (h *CartHandler) ClearCart(c fiber.Ctx) error {
+	userId, ok := c.Locals("userId").(uint)
+	if !ok || userId <= 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(Json{"error": "invalid userId : " + fmt.Sprintf("type : %T value : %v", userId, userId)})
+	}
+
+	err := h.svc.ClearCart(userId)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(Json{"error": err.Error()})
+	}
+
 	return c.Status(fiber.StatusOK).JSON(Json{"message": "succesfully cleared cart"})
 }

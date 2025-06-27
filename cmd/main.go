@@ -12,6 +12,5 @@ func main() {
 	if err != nil {
 		log.Fatalf("err : %v", err.Error())
 	}
-
 	api.SetupServer(config)
 }

@@ -27,7 +27,7 @@ func SetupServer(config config.Config) {
 	}
 
 	log.Print("db connection succesfull")
-	db.AutoMigrate(&domain.Cart{}, &domain.CartItem{})
+	db.AutoMigrate(&domain.Cart{}, &domain.CartItem{}, &domain.Order{}, &domain.OrderItem{})
 	log.Println("url : " + config.PRODUCT_SERVICE_URL)
 	httpHandler := rest.HTTPHandler{
 		App:  app,

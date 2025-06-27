@@ -50,7 +50,7 @@ func (a Auth) Authorize(c fiber.Ctx) error {
 }
 
 func (a Auth) verifyToken(tokenStr string) (user, error) {
-	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("invalid signing method")
 		}
@@ -85,4 +85,21 @@ func (a Auth) GetProductDetails(productID uint) (domain.Product, error) {
 		return domain.Product{}, err
 	}
 	return response.Product, nil
+}
+
+func (a Auth) MapCartItemsOrderItems(cartItems []domain.CartItem) ([]domain.OrderItem, error) {
+	var orderItems []domain.OrderItem
+	for _, cartItem := range cartItems {
+		orderItems = append(orderItems, domain.OrderItem{
+			ProductName: cartItem.ProductName,
+			ProductID:   cartItem.ProductID,
+			Quantity:    cartItem.Quantity,
+			Price:       cartItem.Price,
+			TotalAmount: (cartItem.Price * (float64(cartItem.Quantity))),
+		})
+	}
+	if len(orderItems) <= 0 {
+		return nil, errors.New("no cart item found")
+	}
+	return orderItems, nil
 }

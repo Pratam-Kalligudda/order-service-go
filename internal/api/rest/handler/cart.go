@@ -40,7 +40,7 @@ func (h *CartHandler) GetCartItems(c fiber.Ctx) error {
 
 	cartItems, err := h.svc.GetCartItems(userId)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(Json{"error": err})
+		return c.Status(fiber.StatusInternalServerError).JSON(Json{"error": err.Error()})
 	}
 
 	return c.Status(fiber.StatusOK).JSON(Json{"message": "succesfully got cart items", "items": cartItems})
@@ -55,12 +55,12 @@ func (h *CartHandler) AddItemToCart(c fiber.Ctx) error {
 	var dto dto.AddUpdateProduct
 	err := c.Bind().Body(&dto)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(Json{"error": err})
+		return c.Status(fiber.StatusBadRequest).JSON(Json{"error": err.Error()})
 	}
 
 	item, err := h.svc.AddItemToCart(userId, dto)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(Json{"error": err})
+		return c.Status(fiber.StatusBadRequest).JSON(Json{"error": err.Error()})
 	}
 	return c.Status(fiber.StatusOK).JSON(Json{"message": "succesfully added item to cart", "item": item})
 }

@@ -1,15 +1,16 @@
 package repository
 
 import (
-	"github.com/Pratam-Kalligudda/order-service-go/internal/domain"
 	"gorm.io/gorm"
+
+	"github.com/Pratam-Kalligudda/order-service-go/internal/domain"
 )
 
 type OrderRepository interface {
-	CheckoutCartItems(any) error
-	GetOrders(uint) ([]domain.OrderItem, error)
-	GetOrderByID(uint) (domain.OrderItem, error)
-	GetOrderIDForUserID(uint) ([]uint, error)
+	CheckoutCartItems([]domain.OrderItem) error
+	GetOrders(uint) ([]domain.Order, error)
+	GetOrderByID(uint) (domain.Order, error)
+	CreateNewOrder(domain.Order) (domain.Order, error)
 }
 
 type orderRepository struct {
@@ -19,15 +20,25 @@ type orderRepository struct {
 func NewOrderRepository(db *gorm.DB) OrderRepository {
 	return &orderRepository{db}
 }
-func (od *orderRepository) CheckoutCartItems(any) error {
-	return nil
+
+func (oR *orderRepository) CheckoutCartItems(items []domain.OrderItem) error {
+	err := oR.db.Create(&items).Error
+	return err
 }
-func (od *orderRepository) GetOrders(uint) ([]domain.OrderItem, error) {
-	return nil, nil
+
+func (oR *orderRepository) GetOrders(userId uint) ([]domain.Order, error) {
+	var items []domain.Order
+	err := oR.db.Find(&items, "user_id = ?", userId).Error
+	return items, err
 }
-func (od *orderRepository) GetOrderByID(uint) (domain.OrderItem, error) {
-	return domain.OrderItem{}, nil
+
+func (oR *orderRepository) GetOrderByID(orderID uint) (domain.Order, error) {
+	var item domain.Order
+	err := oR.db.Find(&item, orderID).Error
+	return item, err
 }
-func (od *orderRepository) GetOrderIDForUserID(uint) ([]uint, error) {
-	return nil, nil
+
+func (oR *orderRepository) CreateNewOrder(order domain.Order) (domain.Order, error) {
+	err := oR.db.Create(&order).Error
+	return order, err
 }

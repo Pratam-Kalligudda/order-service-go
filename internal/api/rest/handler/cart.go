@@ -24,7 +24,7 @@ func SetupCartHandler(rh rest.HTTPHandler) {
 	svc := service.NewCartService(repo, rh.Auth)
 	handler := CartHandler{svc}
 
-	pvtRoutes := app.Group("/cart", rh.Auth.Authorize)
+	pvtRoutes := app.Group("/api/carts", rh.Auth.Authorize)
 	pvtRoutes.Get("/", handler.GetCartItems)
 	pvtRoutes.Post("/item/add", handler.AddItemToCart)
 	pvtRoutes.Put("/item/update", handler.UpdateCartItem)

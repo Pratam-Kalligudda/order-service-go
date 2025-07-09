@@ -6,10 +6,8 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/gofiber/fiber/v3"
-	"github.com/golang-jwt/jwt/v5"
 
 	"github.com/Pratam-Kalligudda/order-service-go/internal/domain"
 )
@@ -28,54 +26,22 @@ func NewAuth(sec, url string) Auth {
 }
 
 func (a Auth) Authorize(c fiber.Ctx) error {
-	log.Print("Authorized")
-	tokenStr := c.GetReqHeaders()["Authorization"]
-	if len(tokenStr) <= 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid token"})
+	userIdStr := c.GetReqHeaders()["X-User-Id"]
+	if len(userIdStr) <= 0 || len(userIdStr[0]) <= 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid userId"})
 	}
-
-	tkn := strings.Split(tokenStr[0], " ")
-	if len(tkn) < 2 || tkn[0] != "Bearer" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid token"})
-	}
-
-	usr, err := a.verifyToken(tkn[1])
+	userId, err := strconv.ParseUint(userIdStr[0], 10, 64)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid token : " + err.Error()})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid userId : " + err.Error()})
 	}
-
-	c.Locals("userId", uint(usr.UserId))
-	log.Printf("userId || Authorize: %v", usr.UserId)
+	c.Locals("userId", uint(userId))
+	log.Printf("userId || Authorize: %v", userId)
 	return c.Next()
-}
-
-func (a Auth) verifyToken(tokenStr string) (user, error) {
-	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (any, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.New("invalid signing method")
-		}
-		return []byte(a.secret), nil
-	})
-	if err != nil || !token.Valid {
-		return user{}, err
-	}
-
-	claims := token.Claims.(jwt.MapClaims)
-	id, ok := claims["sub"].(float64)
-	if !ok {
-		return user{}, err
-	}
-
-	log.Printf("user_id || verifyToken: %v", id)
-	user := user{
-		UserId: id,
-	}
-	return user, nil
 }
 
 func (a Auth) GetProductDetails(productID uint) (domain.Product, error) {
 	var response domain.ProductResponse
-	url := a.productServiceURL + "/product/" + strconv.FormatUint(uint64(productID), 10)
+	url := a.productServiceURL + "/api/products/" + strconv.FormatUint(uint64(productID), 10)
 	res, err := http.Get(url)
 	if err != nil {
 		return domain.Product{}, err
